@@ -96,7 +96,7 @@
     border-radius: 6px !important;
     background-color: var(--facebook-blue) !important;
     border-color: var(--facebook-blue) !important;
-    color: white !important;
+    color:white !important;
 }
 .fb-login-button.btn-lg:hover {
     background-color: var(--facebook-blue-hover) !important;
@@ -115,6 +115,21 @@
 .fb-forgot-password-link:hover {
     text-decoration: underline;
 }
+.fb-create-account-button {
+    background-color: #42b72a; /* Vert clair */
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    transition: background-color 0.3s ease;
+}
+
+.fb-create-account-button:hover {
+    background-color: #36a420; /* Vert un peu plus foncé au survol */
+    color: white;
+    text-decoration: none;
+}
+
 
 .fb-login-divider {
     border: none !important; 
