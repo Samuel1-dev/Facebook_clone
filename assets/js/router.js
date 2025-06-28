@@ -5,16 +5,16 @@ const appContainer = document.getElementById('app-container');
 // Définition des routes de l'application
 const routes = {
     // --- Routes Client ---
-    'auth/login': { path: 'vues/clients/auth/login.html', init: initLoginPage, isProtected: false },
-    'auth/register': { path: 'vues/clients/auth/register.html', init: initRegisterPage, isProtected: false },
-    'home': { path: 'vues/clients/home.html', init: initHomePage, isProtected: true },
-    'profile': { path: 'vues/clients/profile.html', init: initProfilePage, isProtected: true },
-    'friends': { path: 'vues/clients/friends.html', init: initFriendsPage, isProtected: true },
-    'chat': { path: 'vues/clients/chat.html', init: initChatPage, isProtected: true },
+    'auth/login': { path: 'vues/clients/auth/login.php', init: initLoginPage, isProtected: false },
+    'auth/register': { path: 'vues/clients/auth/register.php', init: initRegisterPage, isProtected: false },
+    'home': { path: 'vues/clients/home.php', init: initHomePage, isProtected: true },
+    'profile': { path: 'vues/clients/profile.php', init: initProfilePage, isProtected: true },
+    'friends': { path: 'vues/clients/friends.php', init: initFriendsPage, isProtected: true },
+    'chat': { path: 'vues/clients/chat.php', init: initChatPage, isProtected: true },
 
     // --- Routes Admin ---
-    'admin/login': { path: 'vues/back-office/login.html', init: initAdminLoginPage, isAdminRoute: true, isProtected: false },
-    'admin/dashboard': { path: 'vues/back-office/dashboard.html', init: initAdminDashboardPage, isAdminRoute: true, isProtected: true },
+    'admin/login': { path: 'vues/back-office/login.php', init: initAdminLoginPage, isAdminRoute: true, isProtected: false },
+    'admin/dashboard': { path: 'vues/back-office/dashboard.php', init: initAdminDashboardPage, isAdminRoute: true, isProtected: true },
     
 };
 
