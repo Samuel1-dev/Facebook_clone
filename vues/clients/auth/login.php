@@ -13,14 +13,16 @@
         <!-- Panneau de droite : Formulaire de connexion -->
         <div class="fb-login-right-panel">
             <div class="fb-login-form-card">
-                <form id="login-form">
+                
+                <form id="login-form" method="post" action="/facebook_clone/Api/loginApi.php">
                     <div class="mb-3">
-                        <input type="email" class="form-control form-control-lg fb-login-input" id="login-email" placeholder="Adresse e-mail ou numéro de tél." required>
+                        <input type="email" class="form-control form-control-lg fb-login-input" name="email" id="login-email" placeholder="Adresse e-mail ou numéro de tél." required>
                     </div>
                     <div class="mb-3">
-                        <input type="password" class="form-control form-control-lg fb-login-input" id="login-password" placeholder="Mot de passe" required>
+                        <input type="password" class="form-control form-control-lg fb-login-input" name="password" id="login-password" placeholder="Mot de passe" required>
                     </div>
                     <button type="submit" class="btn btn-lg w-100 fw-bold fb-login-button">Se connecter</button>
+                    <div id="login-message" style="text-align:center; font-weight:bold; margin-top:10px;"></div>
                 </form>
                 <a href="#auth/forgot-password" class="fb-forgot-password-link">Mot de passe oublié ?</a>
                 <hr class="fb-login-divider my-3">

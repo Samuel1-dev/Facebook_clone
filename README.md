@@ -430,3 +430,6 @@ Ci-dessous, chaque fonctionnalité du front-end est détaillée avec :
 *   **Documentation API :** Fournir une documentation claire des endpoints (ex: avec Postman, Swagger/OpenAPI) pour faciliter l'intégration avec le front-end.
 
 Ce document devrait donner une feuille de route claire à l'équipe backend pour développer l'API nécessaire au bon fonctionnement de l'application FaceClone.
+
+
+

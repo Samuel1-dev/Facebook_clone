@@ -19,6 +19,9 @@ function updateHeaderAvatar(avatarUrl) {
         headerAvatarImg.src = avatarUrl;
     }
 }
+
+//page de login
+
 function initLoginPage() {
     console.log("Page de Connexion initialisée.");
     document.body.classList.remove('app-active'); // On enlève la classe au cas où
@@ -31,24 +34,15 @@ function initLoginPage() {
 
     const form = document.getElementById('login-form');
     if (form) {
-        // Gestion pour éviter les doublons d'écouteurs
-        const oldSubmitHandler = form.submitHandler;
-        if (oldSubmitHandler) {
-            form.removeEventListener('submit', oldSubmitHandler);
-        }
-
-        const newSubmitHandler = async (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const emailInput = document.getElementById('login-email');
             const passwordInput = document.getElementById('login-password');
-            
-            if (!emailInput || !passwordInput) {
-                console.error("Champs email ou mot de passe non trouvés dans le formulaire de login.");
-                alert("Erreur interne, veuillez réessayer.");
-                return;
-            }
+            const messageBox = document.getElementById('login-message'); 
 
-            const email = emailInput.value;
+
+            const email = emailInput.value.trim();
             const password = passwordInput.value;
 
             if (!email || !password) {
@@ -56,29 +50,75 @@ function initLoginPage() {
                 return;
             }
 
-            // Simulation de l'appel API (ou votre vrai appel fetch si vous l'avez remplacé)
-            const response = await apiLogin(email, password); // Assurez-vous que apiLogin existe et fonctionne
+            try {
+                const response = await fetch("/facebook_clone/Api/loginApi.php", {
+                    method: "POST",
+                    body: new FormData(form)
+                });
 
-            if (response.success) {
-                console.log("Connexion réussie, token:", response.token);
-                sessionStorage.setItem('userToken', response.token);
-                document.body.classList.add('app-active'); // <<< AJOUTER LA CLASSE ICI, APRÈS SUCCÈS
-                window.location.hash = '#home';
-            } else {
-                alert(response.message || "Email ou mot de passe incorrect.");
+                const result = await response.json();
+
+                if (result.success) {
+                    console.log("Connexion réussie, token:", result.token);
+                    sessionStorage.setItem('userToken', result.token);
+                    document.body.classList.add('app-active');
+                    window.location.hash = '#home';
+                } else {
+                    alert(result.message || "Email ou mot de passe incorrect.");
+                    if (messageBox) {
+                        messageBox.innerText = result.message;
+                        messageBox.style.color = "red";
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur réseau :", error);
+                if (messageBox) {
+                    messageBox.innerText = "❌ Une erreur réseau est survenue.";
+                    messageBox.style.color = "red";
+                }
             }
-        };
-
-        form.addEventListener('submit', newSubmitHandler);
-        form.submitHandler = newSubmitHandler;
+        });
     } else {
         console.error("Formulaire de login (#login-form) non trouvé.");
     }
 }
 
+// Page d'inscription
+
 function initRegisterPage() {
-    console.log("Page d'inscription initialisée.");
-    // Logique d'inscription à ajouter ici...
+console.log("Page d'inscription initialisée.");
+     document.body.classList.remove('app-active');
+
+  document.getElementById("register-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const messageBox = document.getElementById("register-message");
+    messageBox.innerText = "Veuillez patienter...";
+    messageBox.style.color = "black";
+
+    const form = new FormData(this);
+
+    try {
+        const response = await fetch("/facebook_clone/Api/registerApi.php", {
+            method: "POST",
+            body: form
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+                document.body.classList.add('app-active'); // <<< AJOUTER LA CLASSE ICI, APRÈS SUCCÈS
+                window.location.hash = '#auth/login';
+            } else {
+                alert(response.message || "Email ou mot de passe incorrect.");
+            }
+        
+    } catch (error) {
+        messageBox.innerText = "❌ Une erreur réseau est survenue.";
+        messageBox.style.color = "red";
+        console.error("Erreur fetch :", error);
+    }
+});  
 }
 
 async function initHomePage() {
@@ -135,7 +175,7 @@ async function initHomePage() {
 
 
 
-// Fonction utilitaire pour la déconnexion
+// Fonction  pour la déconnexion
 function logout() {
     if (typeof chatInterval !== 'undefined' && chatInterval) {
         clearInterval(chatInterval);
@@ -152,9 +192,8 @@ function attachLogoutEvent() {
         logoutBtn.addEventListener('click', logout);
     }
 }
-// assets/js/main.js
 
-// ... (les autres fonctions comme initLoginPage restent identiques)
+
 
 
 

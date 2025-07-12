@@ -1,3 +1,4 @@
+
 <!-- vues/clients/auth/register.html -->
 <div class="modal-backdrop-custom">
     <div class="modal-dialog-custom fb-register-modal">
@@ -11,27 +12,29 @@
                 </div>
             </div>
             <div class="modal-body-custom">
-                <form id="register-form">
+                <form id="register-form" method="post" action="/facebook_clone/Api/registerApi.php">
                     <div class="row g-2 mb-2">
                         <div class="col">
-                            <input type="text" class="form-control fb-register-input" id="register-firstname" placeholder="Prénom" required>
+                            <input type="text" class="form-control fb-register-input" id="register-firstname" name="firstname" placeholder="Prénom" required>
                         </div>
                         <div class="col">
-                            <input type="text" class="form-control fb-register-input" id="register-lastname" placeholder="Nom de famille" required>
+                            <input type="text" class="form-control fb-register-input" id="register-lastname" name="lastname" placeholder="Nom de famille" required>
                         </div>
                     </div>
                     <div class="mb-2">
-                        <input type="email" class="form-control fb-register-input" id="register-email" placeholder="Numéro de mobile ou e-mail" required>
+                        <input type="email" class="form-control fb-register-input" id="register-email" name="email" placeholder="Numéro de mobile ou e-mail" required>
                     </div>
                     <div class="mb-2">
-                        <input type="password" class="form-control fb-register-input" id="register-password" placeholder="Nouveau mot de passe" required>
+                        <input type="password" class="form-control fb-register-input" id="register-password" name="password" placeholder="Nouveau mot de passe" required>
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label fb-small-label">Date de naissance <i class="fas fa-question-circle fa-xs"></i></label>
+                        <label class="form-label fb-small-label">
+                            Date de naissance <i class="fas fa-question-circle fa-xs"></i>
+                        </label>
                         <div class="row g-2">
                             <div class="col">
-                                <select class="form-select fb-register-select" id="register-birth-day" aria-label="Jour" required>
+                                <select class="form-select fb-register-select" id="register-birth-day" name="birth_day" aria-label="Jour" required>
                                     <option value="" disabled selected>Jour</option>
                                     <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
                                     <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
@@ -43,7 +46,7 @@
                                 </select>
                             </div>
                             <div class="col">
-                                <select class="form-select fb-register-select" id="register-birth-month" aria-label="Mois" required>
+                                <select class="form-select fb-register-select" id="register-birth-month" name="birth_month" aria-label="Mois" required>
                                     <option value="" disabled selected>Mois</option>
                                     <option value="1">janv.</option><option value="2">févr.</option><option value="3">mars</option><option value="4">avr.</option>
                                     <option value="5">mai</option><option value="6">juin</option><option value="7">juil.</option><option value="8">août</option>
@@ -51,18 +54,15 @@
                                 </select>
                             </div>
                             <div class="col">
-                                <select class="form-select fb-register-select" id="register-birth-year" aria-label="Année" required>
+                                <select class="form-select fb-register-select" id="register-birth-year" name="birth_year" aria-label="Année" required>
                                     <option value="" disabled selected>Année</option>
-                                    <!-- Exemple d'années. Vous pouvez ajouter une liste plus longue ici manuellement. -->
-                                    <!-- Pour une application réelle avec une longue liste, JS est généralement préféré pour la maintenabilité. -->
                                     <option value="2010">2010</option><option value="2009">2009</option><option value="2008">2008</option><option value="2007">2007</option>
                                     <option value="2006">2006</option><option value="2005">2005</option><option value="2004">2004</option><option value="2003">2003</option>
                                     <option value="2002">2002</option><option value="2001">2001</option><option value="2000">2000</option><option value="1999">1999</option>
                                     <option value="1998">1998</option><option value="1997">1997</option><option value="1996">1996</option><option value="1995">1995</option>
                                     <option value="1994">1994</option><option value="1993">1993</option><option value="1992">1992</option><option value="1991">1991</option>
                                     <option value="1990">1990</option>
-                                    <!-- ... continuez la liste aussi loin que nécessaire ... -->
-                                    <option value="1924">1924</option> <!-- Exemple de limite inférieure -->
+                                    <option value="1924">1924</option>
                                 </select>
                             </div>
                         </div>
@@ -95,6 +95,8 @@
                     <div class="text-center mt-3 mb-3">
                         <button type="submit" class="btn btn-lg fw-bold fb-register-submit-button">S’inscrire</button>
                     </div>
+                    <div id="register-message" style="text-align:center; font-weight:bold; margin-top:10px;"></div>
+
                 </form>
                 <a href="#auth/login" class="fb-already-have-account-link">Vous avez déjà un compte ?</a>
             </div>
