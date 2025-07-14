@@ -2,26 +2,46 @@
 
 // Ce fichier contient la logique à exécuter pour chaque page.
 // Ces fonctions sont appelées par le routeur après avoir chargé une vue.
-function updateActiveHeaderTab(activeItemName) {
-    const navIcons = document.querySelectorAll('.fb-header-center .fb-header-icon');
-    navIcons.forEach(iconLink => {
-        iconLink.classList.remove('active');
-        if (iconLink.dataset.navItem === activeItemName) {
-            iconLink.classList.add('active');
-        }
-    });
-}
 
+// Page d'inscription
 
-function updateHeaderAvatar(avatarUrl) {
-    const headerAvatarImg = document.getElementById('header-user-avatar');
-    if (headerAvatarImg && avatarUrl) {
-        headerAvatarImg.src = avatarUrl;
+function initRegisterPage() {
+console.log("Page d'inscription initialisée.");
+     document.body.classList.remove('app-active');
+
+  document.getElementById("register-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const messageBox = document.getElementById("register-message");
+    messageBox.innerText = "Veuillez patienter...";
+    messageBox.style.color = "black";
+
+    const form = new FormData(this);
+
+    try {
+        const response = await fetch("/facebook_clone/Api/registerApi.php", {
+            method: "POST",
+            body: form
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+                document.body.classList.add('app-active'); // <<< AJOUTER LA CLASSE ICI, APRÈS SUCCÈS
+                window.location.hash = '#auth/login';
+            } else {
+                alert(response.message || "Email ou mot de passe incorrect.");
+            }
+        
+    } catch (error) {
+        messageBox.innerText = "❌ Une erreur réseau est survenue.";
+        messageBox.style.color = "red";
+        console.error("Erreur fetch :", error);
     }
+});  
 }
 
 //page de login
-
 function initLoginPage() {
     console.log("Page de Connexion initialisée.");
     document.body.classList.remove('app-active'); // On enlève la classe au cas où
@@ -83,98 +103,6 @@ function initLoginPage() {
     }
 }
 
-// Page d'inscription
-
-function initRegisterPage() {
-console.log("Page d'inscription initialisée.");
-     document.body.classList.remove('app-active');
-
-  document.getElementById("register-form").addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const messageBox = document.getElementById("register-message");
-    messageBox.innerText = "Veuillez patienter...";
-    messageBox.style.color = "black";
-
-    const form = new FormData(this);
-
-    try {
-        const response = await fetch("/facebook_clone/Api/registerApi.php", {
-            method: "POST",
-            body: form
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-                document.body.classList.add('app-active'); // <<< AJOUTER LA CLASSE ICI, APRÈS SUCCÈS
-                window.location.hash = '#auth/login';
-            } else {
-                alert(response.message || "Email ou mot de passe incorrect.");
-            }
-        
-    } catch (error) {
-        messageBox.innerText = "❌ Une erreur réseau est survenue.";
-        messageBox.style.color = "red";
-        console.error("Erreur fetch :", error);
-    }
-});  
-}
-
-async function initHomePage() {
- if (!sessionStorage.getItem('userToken')) { logout(); return; }
-    document.body.classList.add('app-active');
-    attachLogoutEvent();
-    updateActiveHeaderTab('home');
-
- if (!sessionStorage.getItem('userToken')) {
-        logout(); 
-        return;
-    }
-    document.body.classList.add('app-active');
-    console.log("Page d'accueil initialisée.");
-    
-    // --- PARTIE EXISTANTE : CHARGER LE FIL D'ACTUALITÉ ---
-    const feedContainer = document.getElementById('feed-container');
-    feedContainer.innerHTML = "Chargement des articles...";
-    const postsResponse = await apiFetchPosts();
-    if (postsResponse.success) {
-        feedContainer.innerHTML = "";
-        postsResponse.posts.forEach(post => {
-            feedContainer.innerHTML += createPostHTML(post);
-        });
-        attachPostEventListeners();
-    } else {
-        feedContainer.innerHTML = "Impossible de charger les articles.";
-    }
-
-    // --- NOUVELLE PARTIE : CHARGER LES CONTACTS DANS LA SIDEBAR ---
-    const contactsContainer = document.getElementById('chat-contacts-container');
-    if (contactsContainer) { // On vérifie que le conteneur existe bien
-        contactsContainer.innerHTML = "Chargement...";
-        const convosResponse = await apiFetchConversations();
-        if (convosResponse.success) {
-            contactsContainer.innerHTML = '';
-            convosResponse.conversations.forEach(convo => {
-                // On crée un lien direct vers la page de chat pour chaque contact
-                contactsContainer.innerHTML += `
-                    <a href="#chat" class="chat-contact-item" data-conv-id="${convo.id}" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: black; padding: 8px; border-radius: 8px;">
-                        <img src="${convo.userAvatar}" alt="${convo.userName}" style="width: 36px; height: 36px; border-radius: 50%;">
-                        <strong>${convo.userName}</strong>
-                    </a>
-                `;
-            });
-        } else {
-            contactsContainer.innerHTML = 'Erreur chargement contacts.';
-        }
-    }
-    
-    attachLogoutEvent();
-}
-
-
-
-
 // Fonction  pour la déconnexion
 function logout() {
     if (typeof chatInterval !== 'undefined' && chatInterval) {
@@ -192,6 +120,127 @@ function attachLogoutEvent() {
         logoutBtn.addEventListener('click', logout);
     }
 }
+
+async function apiCreatePost(description, imageFile = null) {
+    const token = sessionStorage.getItem('userToken');
+    const formData = new FormData();
+    formData.append('description', description);
+    if (imageFile) formData.append('image', imageFile);
+
+    const response = await fetch('/facebook_clone/Api/post/create.php', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + token
+        },
+        body: formData
+    });
+
+    return await response.json();
+}
+
+async function apiFetchPosts() {
+    try {
+        const token = sessionStorage.getItem('userToken');
+        const response = await fetch('/facebook_clone/Api/post/feed.php', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json'
+            }
+        });
+
+        const data = await response.json();
+        return data; // { success: true, posts: [...] }
+    } catch (error) {
+        console.error("Erreur lors du chargement des posts :", error);
+        return { success: false, error: "Erreur réseau" };
+    }
+}
+
+function createPostHTML(post) {
+    return `
+        <div class="post-card">
+            <div class="post-header">
+                <strong>${post.author}</strong>
+                <span class="post-date">${new Date(post.created_at).toLocaleString()}</span>
+            </div>
+            <div class="post-body">
+                <p>${post.description}</p>
+                ${post.image ? `<img src="${post.image}" alt="Image du post" class="post-image">` : ''}
+            </div>
+        </div>
+    `;
+}
+
+
+async function initHomePage() {
+    const token = sessionStorage.getItem('userToken');
+    if (!token) {
+        logout();
+        return;
+    }
+
+    document.body.classList.add('app-active');
+    attachLogoutEvent();
+    updateActiveHeaderTab('home');
+
+    console.log("Page d'accueil initialisée.");
+
+    const feedContainer = document.getElementById('feed-container');
+    feedContainer.innerHTML = "Chargement des articles...";
+
+    // Création de post (au clavier)
+    const input = document.querySelector('.create-post-input');
+    input.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter' && e.target.value.trim() !== "") {
+            const description = e.target.value.trim();
+            const result = await apiCreatePost(description);
+
+            if (result.success) {
+                const postHTML = createPostHTML(result.post);
+                feedContainer.insertAdjacentHTML('afterbegin', postHTML);
+                e.target.value = "";
+            } else {
+                alert(result.error || "Erreur lors de la création du post.");
+            }
+        }
+    });
+
+    // Charger le fil d’actualité
+    const postsResponse = await apiFetchPosts();
+    if (postsResponse.success) {
+        feedContainer.innerHTML = "";
+        postsResponse.posts.forEach(post => {
+            feedContainer.innerHTML += createPostHTML(post);
+        });
+        attachPostEventListeners();
+    } else {
+        feedContainer.innerHTML = "Impossible de charger les articles.";
+    }
+}
+
+
+function updateActiveHeaderTab(activeItemName) {
+    const navIcons = document.querySelectorAll('.fb-header-center .fb-header-icon');
+    navIcons.forEach(iconLink => {
+        iconLink.classList.remove('active');
+        if (iconLink.dataset.navItem === activeItemName) {
+            iconLink.classList.add('active');
+        }
+    });
+}
+
+
+function updateHeaderAvatar(avatarUrl) {
+    const headerAvatarImg = document.getElementById('header-user-avatar');
+    if (headerAvatarImg && avatarUrl) {
+        headerAvatarImg.src = avatarUrl;
+    }
+}
+
+
+
+
 
 
 

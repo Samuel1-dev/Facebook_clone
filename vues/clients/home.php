@@ -56,33 +56,37 @@
 
     <!-- COLONNE CENTRALE (FIL D'ACTUALITÉ) -->
     <section class="fb-feed-column">
-        <!-- Stories (placeholder) -->
-        <div class="fb-stories-section card-fb-dark">
-            <p class="p-3">Section des Stories (à venir)</p>
-        </div>
 
-        <!-- Boîte de création de post -->
-        <div class="fb-create-post-box card-fb-dark">
-            <div class="create-post-header">
-                
-                <a href="#profile">
-                 <img src="https://i.pravatar.cc/40?u=currentUser" alt="Avatar" class="fb-user-avatar-md">
-                </a>
-                <input type="text" placeholder="Quoi de neuf, Ayindé ?" class="create-post-input">
-            </div>
-            <hr class="my-2">
-            <div class="create-post-actions">
-                <button><i class="fas fa-video text-danger"></i> Vidéo en direct</button>
-                <button><i class="fas fa-photo-video text-success"></i> Photo/Vidéo</button>
-                <button><i class="far fa-grin-beam text-warning"></i> Humeur/Activité</button>
-            </div>
-        </div>
-        
-        <!-- Conteneur pour les articles du fil d'actualité -->
-        <div id="feed-container">
-            <!-- Les articles (posts) seront injectés ici par JavaScript -->
-        </div>
-    </section>
+  <!-- Boîte de création de post -->
+  <div class="fb-create-post-box card-fb-dark">
+    <div class="create-post-header">
+      <a href="#profile">
+        <img src="https://i.pravatar.cc/40?u=currentUser" alt="Avatar" class="fb-user-avatar-md" />
+      </a>
+      <input
+        type="text"
+        placeholder="Quoi de neuf, Ayindé ?"
+        class="create-post-input"
+        name="description"
+        autocomplete="off"
+      />
+      <!-- Champ pour uploader une image -->
+      <input type="file" class="create-post-image" name="image" accept="image/*" />
+    </div>
+    <hr class="my-2" />
+    <div class="create-post-actions">
+      <button type="button"><i class="fas fa-video text-danger"></i> Vidéo en direct</button>
+      <button type="button"><i class="fas fa-photo-video text-success"></i> Photo/Vidéo</button>
+      <button type="button"><i class="far fa-grin-beam text-warning"></i> Humeur/Activité</button>
+    </div>
+  </div>
+
+  <!-- Conteneur pour les articles du fil d'actualité -->
+  <div id="feed-container">
+    <!-- Les articles (posts) seront injectés ici par JavaScript -->
+  </div>
+</section>
+
 
     <!-- COLONNE DE DROITE -->
     <aside class="fb-right-sidebar">
