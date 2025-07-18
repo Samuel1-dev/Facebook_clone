@@ -1,27 +1,27 @@
 <?php
-require_once '../connexion.php';      // connexion PDO
-require_once '../config/auth.php';    // vérifie et retourne l'id utilisateur
+
+require_once '../connexion.php';
+require_once '../config/auth.php';
 
 header('Content-Type: application/json');
 
-// Authentification utilisateur
+
 $userId = getUserIdFromToken();
 if (!$userId) {
     echo json_encode(['success' => false, 'error' => 'Token invalide ou expiré']);
     exit;
 }
 
-// Pagination (optionnelle)
 $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
 $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
 $offset = ($page - 1) * $limit;
 
-// Récupération des posts + auteurs + likes + commentaires
+// Injecter LIMIT/OFFSET directement (pas via bind !)
 $sql = "
 SELECT
     p.id,
     p.user_id,
-    u.name AS author_name,
+    CONCAT(u.firstname, ' ', u.lastname) AS author_name,
     u.avatar AS author_avatar,
     p.description,
     p.image_url,
@@ -33,20 +33,28 @@ SELECT
         SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id
     ) AS comments_count,
     (
-        SELECT COUNT(*) FROM likes l2 WHERE l2.post_id = p.id AND l2.user_id = ?
+        SELECT COUNT(*) FROM likes l2 WHERE l2.post_id = p.id AND l2.user_id = :user_id
     ) > 0 AS is_liked_by_user
 FROM posts p
 JOIN users u ON u.id = p.user_id
 ORDER BY p.created_at DESC
-LIMIT ? OFFSET ?
+LIMIT $limit OFFSET $offset
 ";
 
-$stmt = $pdo->prepare($sql);
-$stmt->execute([$userId, $limit, $offset]);
-$posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+try {
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([':user_id' => $userId]);
+    $posts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Réponse JSON
-echo json_encode([
-    'success' => true,
-    'posts' => $posts
-]);
+    echo json_encode([
+        'success' => true,
+        'posts' => $posts
+    ]);
+} catch (PDOException $e) {
+    echo json_encode([
+        'success' => false,
+        'error' => 'Erreur base de données : ' . $e->getMessage()
+    ]);
+}
+
+?>

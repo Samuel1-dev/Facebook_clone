@@ -6,7 +6,6 @@
 
 Ce projet est le front-end d'une application web de type réseau social, fortement inspirée du modèle Facebook. Il a été développé en utilisant HTML, CSS (avec Bootstrap 5.3.3 pour la structure et les composants de base), et JavaScript natif pour la logique client et les interactions dynamiques (SPA - Single Page Application).
 
-L'objectif de ce document est de guider l'équipe backend dans l'implémentation de l'API nécessaire pour rendre les fonctionnalités du front-end pleinement opérationnelles.
 
 ## Technologies Utilisées (Frontend)
 

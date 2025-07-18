@@ -23,7 +23,7 @@ $imageUrl = null;
 
 // Gestion du fichier image s'il est présent
 if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
-    $uploadDir = '/facebook_clone/image/'; // Chemin vers le dossier d'upload
+    $uploadDir = __DIR__ . '/../../image/';// Chemin vers le dossier d'upload
     $filename = uniqid() . '_' . basename($_FILES['image']['name']);
     $targetFile = $uploadDir . $filename;
 
@@ -55,8 +55,10 @@ $stmt->execute([
 $postId = $pdo->lastInsertId();
 
 // Récupérer les infos de l’auteur pour la réponse
-$userStmt = $pdo->prepare("SELECT name AS author_name, avatar AS author_avatar FROM users WHERE id = :user_id");
-$userStmt->execute([$userId]);
+$userStmt = $pdo->prepare("SELECT firstname AS author_name, avatar AS author_avatar  FROM users WHERE id = :user_id");
+$userStmt->execute([
+    ':user_id' => $userId
+]);
 $userData = $userStmt->fetch(PDO::FETCH_ASSOC);
 
 $postData = [
@@ -73,3 +75,4 @@ $postData = [
 ];
 
 echo json_encode(['success' => true, 'post' => $postData]);
+?>

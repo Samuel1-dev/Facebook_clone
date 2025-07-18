@@ -168,10 +168,6 @@ body.app-active { /* On pourrait ajouter cette classe au body quand l'utilisateu
     color: #E4E6EB; /* Texte par défaut dans les cartes */
 }
 
-.fb-stories-section {
-    /* Style pour la section des stories */
-}
-
 .fb-create-post-box {
     padding: 12px 16px;
 }
@@ -322,3 +318,18 @@ body.app-active { /* On pourrait ajouter cette classe au body quand l'utilisateu
     width: 28px !important; /* Consistance avec sidebar gauche */
     height: 28px !important;
 }
+.like-btn.liked {
+    color: blue;
+    font-weight: bold;
+}
+.comments-section {
+  background-color: #1e1e2f;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.comment-form img {
+  width: 36px;
+  height: 36px;
+}
+

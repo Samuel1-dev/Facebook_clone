@@ -5,72 +5,16 @@
 
 const FAKE_DELAY = 500; // Simule la latence du réseau
 
-async function apiLogin(email, password) {
-    console.log(`API: Tentative de connexion pour ${email}...`);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            // Dans le vrai projet, vous feriez un fetch() vers 'api/auth/login.php'
-            if (email === "test@test.com" && password === "password") {
-                console.log("API: Connexion réussie.");
-                resolve({ success: true, token: "un_super_token_secret_12345" });
-            } else {
-                console.log("API: Échec de la connexion.");
-                resolve({ success: false, message: "Email ou mot de passe incorrect." });
-            }
-        }, FAKE_DELAY);
-    });
-}
 
-async function apiFetchPosts() {
-    console.log("API: Récupération des articles...");
-    return new Promise(resolve => {
-        setTimeout(() => {
-            // Simule une réponse de votre API PHP
-            const fakePosts = [
-                { id: 1, author_name: "Alice", author_avatar: "https://i.pravatar.cc/50?u=1", description: "Super journée à la plage ! ☀️", image: "https://picsum.photos/400/200?random=1" },
-                { id: 2, author_name: "Bob", author_avatar: "https://i.pravatar.cc/50?u=2", description: "Mon nouveau projet de code avance bien.", image: null },
-                { id: 3, author_name: "Charlie", author_avatar: "https://i.pravatar.cc/50?u=3", description: "Qui veut aller au cinéma ce soir ?", image: "https://picsum.photos/400/200?random=2" },
-            ];
-            console.log("API: Articles reçus.");
-            resolve({ success: true, posts: fakePosts });
-        }, FAKE_DELAY);
-    });
-}
 
-const FAKE_USER_DATA = {
-    id: 1,
-    firstname: "John",
-    lastname: "Doe",
-    email: "test@test.com",
-    avatar: "https://i.pravatar.cc/160",
-    banner: "https://picsum.photos/800/250",
-    friendsCount: 128
-};
 
-const FAKE_USER_POSTS = [
-    { id: 10, author_name: "John Doe", author_avatar: "https://i.pravatar.cc/50", description: "Je viens de mettre à jour mon profil !", image: null },
-    { id: 11, author_name: "John Doe", author_avatar: "https://i.pravatar.cc/50", description: "Retour sur un super projet de la semaine dernière.", image: "https://picsum.photos/400/200?random=10" }
-];
 
-async function apiFetchUserProfile() {
-    console.log("API: Récupération du profil de l'utilisateur...");
-    return new Promise(resolve => {
-        setTimeout(() => {
-            console.log("API: Profil reçu.");
-            resolve({ success: true, user: FAKE_USER_DATA });
-        }, 300); // Délai plus court
-    });
-}
 
-async function apiFetchPostsForUser(userId) {
-    console.log(`API: Récupération des articles pour l'utilisateur #${userId}...`);
-    return new Promise(resolve => {
-        setTimeout(() => {
-            console.log("API: Articles de l'utilisateur reçus.");
-            resolve({ success: true, posts: FAKE_USER_POSTS });
-        }, 500);
-    });
-}
+
+
+
+
+
 
 // assets/js/api.js
 

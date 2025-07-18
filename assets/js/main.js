@@ -142,36 +142,70 @@ async function apiFetchPosts() {
     try {
         const token = sessionStorage.getItem('userToken');
         const response = await fetch('/facebook_clone/Api/post/feed.php', {
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + token,
-                'Accept': 'application/json'
-            }
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + sessionStorage.getItem('userToken'),
+            'Accept': 'application/json'
+        }
         });
 
         const data = await response.json();
-        return data; // { success: true, posts: [...] }
+        return data; 
     } catch (error) {
         console.error("Erreur lors du chargement des posts :", error);
         return { success: false, error: "Erreur réseau" };
     }
 }
 
+
 function createPostHTML(post) {
+    // Avatar par défaut si aucun n'est fourni
+    const avatar = post.author_avatar 
+        ? `/facebook_clone/${post.author_avatar}` 
+        : '/facebook_clone/assets/default-avatar.jpg'; 
+
+    // Image du post si présente
+    const imageSection = post.image_url 
+        ? `<img src="/facebook_clone/${post.image_url}" alt="Image du post" class="img-fluid rounded mb-3 mt-2">` 
+        : '';
+
     return `
-        <div class="post-card">
-            <div class="post-header">
-                <strong>${post.author}</strong>
-                <span class="post-date">${new Date(post.created_at).toLocaleString()}</span>
+        <article class="post-card bg-dark text-white p-3 rounded mb-4" id="post-${post.id}">
+        <header class="d-flex align-items-center mb-2">
+            <img src="${avatar}" alt="Avatar" class="rounded-circle me-2" style="width: 50px; height: 50px;">
+            <strong>${post.author_name}</strong>
+        </header>
+        <p>${post.description}</p>
+        ${imageSection}
+        <footer class="post-actions d-flex justify-content-between align-items-center mt-3">
+            <button class="btn btn-outline-light like-btn ${post.is_liked_by_user ? 'liked' : ''}" 
+                data-post-id="${post.id}" 
+                onclick="toggleLike(${post.id}, this)">
+                <span class="icon">${post.is_liked_by_user ? '❤️' : '👍'}</span>
+                <span class="like-count ms-1">${post.likes_count}</span>
+                <span class="ms-1">J'aime</span>
+            </button>
+
+            <button class="btn btn-outline-light comment-btn" data-post-id="${post.id}">
+                💬 Commenter
+            </button>
+        </footer>
+        <div class="comments-section mt-3 border-top pt-3" id="comments-for-${post.id}" style="display: none;">
+        
+            <!-- Zone où s’afficheront les commentaires -->
+            <div class="comments-list mb-3">
+                <p class="text-muted"><em>Aucun commentaire pour l'instant.</em></p>
             </div>
-            <div class="post-body">
-                <p>${post.description}</p>
-                ${post.image ? `<img src="${post.image}" alt="Image du post" class="post-image">` : ''}
+
+            <!-- Formulaire d’ajout de commentaire -->
+            <div class="comment-form d-flex align-items-center">
+                <img src="${avatar}" alt="Votre avatar" class="rounded-circle me-2" style="width: 36px; height: 36px;">
+                <input type="text" class="form-control me-2 comment-input" placeholder="Écrivez un commentaire..." data-post-id="${post.id}">
+                <button class="btn btn-primary add-comment-btn" data-post-id="${post.id}">Envoyer</button>
             </div>
         </div>
-    `;
+    </article>`;
 }
-
 
 async function initHomePage() {
     const token = sessionStorage.getItem('userToken');
@@ -190,21 +224,46 @@ async function initHomePage() {
     feedContainer.innerHTML = "Chargement des articles...";
 
     // Création de post (au clavier)
-    const input = document.querySelector('.create-post-input');
-    input.addEventListener('keypress', async (e) => {
-        if (e.key === 'Enter' && e.target.value.trim() !== "") {
-            const description = e.target.value.trim();
-            const result = await apiCreatePost(description);
+   const input = document.querySelector('.create-post-input');
+    const imageInput = document.getElementById('imageInput');
+    const photoBtn = document.getElementById('photoBtn');
+    let selectedImage = null; // image temporairement stockée
 
-            if (result.success) {
-                const postHTML = createPostHTML(result.post);
-                feedContainer.insertAdjacentHTML('afterbegin', postHTML);
-                e.target.value = "";
-            } else {
-                alert(result.error || "Erreur lors de la création du post.");
-            }
-        }
+    // 1. Clique sur le bouton "Photo/Vidéo" → ouvre le sélecteur de fichier
+    photoBtn.addEventListener('click', () => {
+    imageInput.click();
     });
+
+    // 2. Lorsqu'une image est choisie, on la stocke
+    imageInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        selectedImage = e.target.files[0];
+        console.log("Image sélectionnée :", selectedImage.name);
+    }
+    });
+
+    // 3. Entrée dans le champ de texte → envoie le texte + image si présente
+    input.addEventListener('keypress', async (e) => {
+    if (e.key === 'Enter' && e.target.value.trim() !== "") {
+        const description = e.target.value.trim();
+        const imageFile = selectedImage;
+
+        const result = await apiCreatePost(description, imageFile);
+
+        if (result.success) {
+        const postHTML = createPostHTML(result.post);
+        feedContainer.insertAdjacentHTML('afterbegin', postHTML);
+
+        // Réinitialisation
+        e.target.value = "";
+        selectedImage = null;
+        imageInput.value = ""; // vide le champ file
+        } else {
+        alert(result.error || "Erreur lors de la création du post.");
+        }
+    }
+    });
+
 
     // Charger le fil d’actualité
     const postsResponse = await apiFetchPosts();
@@ -237,9 +296,99 @@ function updateHeaderAvatar(avatarUrl) {
         headerAvatarImg.src = avatarUrl;
     }
 }
+// cette fonction recupère l'evenement like et envoie id du post a l'Api qui revoie une reponse json qui comporte is_like_by_user qui est soit trueou false si true on ajoute un like si false on retire 
+async function toggleLike(postId, buttonElement) {
+    const token = sessionStorage.getItem('userToken');
 
+    const response = await fetch('/facebook_clone/Api/post/like.php', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ post_id: postId })
+    });
 
+    const result = await response.json();
 
+    if (result.success) {
+        const icon = buttonElement.querySelector('.icon');
+        const likeCountSpan = buttonElement.querySelector('.like-count');
+
+        if (result.is_liked_by_user) {
+            buttonElement.classList.add('liked');
+            icon.textContent = '❤️';
+            buttonElement.style.color = 'blue';
+        } else {
+            buttonElement.classList.remove('liked');
+            icon.textContent = '👍';
+            buttonElement.style.color = 'white';
+        }
+
+        likeCountSpan.textContent = result.new_likes_count;
+    } else {
+        alert(result.error || "Erreur lors du like.");
+    }
+}
+// Fonction pour charger les commentaires d'un post spécifique depuis read.php
+async function loadCommentsForPost(postId) {
+    
+    const token = sessionStorage.getItem('userToken');
+
+    const response = await fetch(`/facebook_clone/Api/comments/read.php?post_id=${postId}`, {
+        headers: {
+            'Authorization': 'Bearer ' + token
+        }
+    });
+
+    const result = await response.json();
+
+    const commentsList = document.querySelector(`#comments-for-${postId} .comments-list`);
+    commentsList.innerHTML = ""; 
+
+    if (result.success) {
+        if (result.comments.length === 0) {
+            commentsList.innerHTML = `<p style="color: white;"><em>Aucun commentaire pour l'instant.</em></p>`;
+        } else {
+            result.comments.forEach(comment => {
+                const commentHTML = createCommentHTML(comment);
+                commentsList.insertAdjacentHTML('beforeend', commentHTML);
+            });
+        }
+    } else {
+        commentsList.innerHTML = `<p class="text-danger">${result.error}</p>`;
+    }
+}
+// Fonction pour obtenir l'ID de l'utilisateur actuel à partir du token
+function getCurrentUserId() {
+    const token = sessionStorage.getItem('userToken');
+    if (!token) return null;
+
+    try {
+        const payload = JSON.parse(atob(token));
+        return payload.id || null;
+    } catch (e) {
+        console.error("Token invalide :", e);
+        return null;
+    }
+}
+
+// Fonction pour créer le HTML d'un commentaire
+function createCommentHTML(comment) {
+    const isAuthor = (comment.author_id === getCurrentUserId()); 
+    const authorLabel = isAuthor ? ' <span class="badge bg-secondary">Auteur</span>' : '';
+    const avatar = comment.author_avatar || '/facebook_clone/assets/default-avatar.jpg';
+
+    return `
+        <div class="d-flex align-items-start mb-2">
+            <img src="${avatar}" class="rounded-circle me-2" style="width: 32px; height: 32px;">
+            <div>
+                <strong>${comment.author_name}</strong>${authorLabel}<br>
+                <span>${comment.text}</span>
+            </div>
+        </div>
+    `;
+}
 
 
 
@@ -251,65 +400,76 @@ function attachPostEventListeners() {
     const feedContainer = document.getElementById('feed-container');
 
     feedContainer.addEventListener('click', (event) => {
-        const target = event.target; // L'élément précis sur lequel on a cliqué
-
-        // --- GESTION DU BOUTON "J'AIME" ---
-        const likeButton = target.closest('.like-btn');
-        if (likeButton) {
-            likeButton.classList.toggle('liked'); // Ajoute ou enlève une classe 'liked'
-            const icon = likeButton.querySelector('.icon');
-            if (likeButton.classList.contains('liked')) {
-                likeButton.style.color = 'blue'; // Simulation du changement de couleur de l'icône
-                icon.textContent = '❤️';
-                console.log(`Vous aimez le post #${likeButton.dataset.postId}`);
-            } else {
-                likeButton.style.color = 'black';
-                icon.textContent = '👍';
-                console.log(`Vous n'aimez plus le post #${likeButton.dataset.postId}`);
-            }
-        }
-
         // --- GESTION DU BOUTON "COMMENTER" (pour afficher/cacher) ---
-        const commentButton = target.closest('.comment-btn');
-        if (commentButton) {
-            const postId = commentButton.dataset.postId;
-            const commentsSection = document.getElementById(`comments-for-${postId}`);
-            // On inverse l'affichage
-            const isVisible = commentsSection.style.display === 'block';
-            commentsSection.style.display = isVisible ? 'none' : 'block';
+        document.addEventListener('click', async (e) => {
+    const commentBtn = e.target.closest('.comment-btn');
+    if (commentBtn) {
+        const postId = commentBtn.dataset.postId;
+        const section = document.getElementById(`comments-for-${postId}`);
+        section.style.display = section.style.display === 'none' ? 'block' : 'none';
+
+        
+
+        if (section.style.display === 'block') {
+            await loadCommentsForPost(postId); // charge les commentaires
         }
+    }
+            commentBtn.disabled = true;
+
+    });
 
         // --- GESTION DE L'AJOUT D'UN NOUVEAU COMMENTAIRE ---
-        const addCommentButton = target.closest('.add-comment-btn');
-        if (addCommentButton) {
-            const postId = addCommentButton.dataset.postId;
-            const postCard = document.getElementById(`post-${postId}`);
-            const input = postCard.querySelector('.comment-form input');
-            const commentText = input.value.trim();
+        document.addEventListener('click', async function (event) {
+        const btn = event.target.closest('.add-comment-btn');
+        if (!btn) return;
 
-            if (commentText) {
-                console.log(`Nouveau commentaire sur le post #${postId}: "${commentText}"`);
-                const commentsList = postCard.querySelector('.comments-list');
-                
-                // Si c'est le premier commentaire, on enlève le message "Aucun commentaire"
-                if (commentsList.querySelector('em')) {
-                    commentsList.innerHTML = '';
-                }
-                
-                // Création du HTML pour le nouveau commentaire (on simule l'auteur)
-                const newComment = { author: "Vous", text: commentText };
-                commentsList.innerHTML += createCommentHTML(newComment);
-                
-                // On vide le champ de saisie
-                input.value = '';
+        const postId = btn.dataset.postId;
+        const commentForm = btn.closest('.comment-form');
+        const commentInput = commentForm.querySelector('.comment-input');
+        const commentText = commentInput.value.trim();
+        const commentsList = btn.closest('.comments-section').querySelector('.comments-list');
+            
+        if (!commentText) return;
+
+        const token = sessionStorage.getItem('userToken');
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/facebook_clone/Api/comments/create.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    post_id: postId,
+                    text: commentText
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                const emptyText = commentsList.querySelector('p');
+                if (emptyText) emptyText.remove();
+
+                const commentHTML = createCommentHTML(data.comment);
+                commentsList.insertAdjacentHTML('beforeend', commentHTML);
+                commentInput.value = '';
+            } else {
+                alert(data.error || "Erreur lors de l'ajout du commentaire.");
             }
+        } catch (error) {
+            console.error("Erreur réseau :", error);
+        } finally {
+            btn.disabled = false;
         }
+    });
     });
 }
 
-// assets/js/main.js
 
-// ... (les autres fonctions comme initLoginPage, initHomePage, attachPostEventListeners, etc. restent identiques)
+
 
 // VERSION COMPLÈTE ET CORRIGÉE de initProfilePage
 async function initProfilePage() {
@@ -485,105 +645,217 @@ function attachProfilePostEventListeners() {
         }
     });
 }
-// ... (le reste du fichier)
 
-// assets/js/main.js
+// Génère le HTML d'une carte utilisateur selon le type (demande ou simple utilisateur)
+function createUserCardHTML(user, type = 'user') {
+    let buttons = '';
+    
+    if (type === 'request') {
+        buttons = `
+            <button class="accept-friend-btn" data-user-id="${user.id}">Accepter</button>
+            <button class="refuse-friend-btn" data-user-id="${user.id}">Refuser</button>
+        `;
+    } else if (type === 'user') {
+        // Ici pas de onclick inline : gestion via event listener
+        buttons = `<button class="add-friend-btn" data-user-id="${user.id}">Ajouter en ami</button>`;
+    }
 
-// ... (fonctions existantes)
+    return `
+        <div class="user-card" id="user-card-${user.id}" style="display: flex; align-items: center; justify-content: space-between; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <img src="${user.avatar || 'default-avatar.png'}" alt="Avatar de ${user.name}" style="width: 60px; height: 60px; border-radius: 50%;">
+                <strong>${user.name}</strong>
+            </div>
+            <div class="user-card-actions">
+                ${buttons}
+            </div>
+        </div>
+    `;
+}
 
+// Initialise la page "Amis" : charge données et attache événements
 async function initFriendsPage() {
- if (!sessionStorage.getItem('userToken')) { logout(); return; }
+    if (!sessionStorage.getItem('userToken')) { logout(); return; }
+
     document.body.classList.add('app-active');
     attachLogoutEvent();
     updateActiveHeaderTab('friends');
-
     console.log("Page des amis initialisée.");
-    attachLogoutEvent();
 
     const requestsList = document.getElementById('friend-requests-list');
     const allUsersList = document.getElementById('all-users-list');
+    const searchInput = document.getElementById('search-users-input');
 
-    // --- 1. Charger les demandes d'amitié ---
-    requestsList.innerHTML = 'Chargement...';
-    const requestsResponse = await apiFetchFriendRequests();
-    if (requestsResponse.success && requestsResponse.requests.length > 0) {
-        requestsList.innerHTML = '';
-        requestsResponse.requests.forEach(user => {
-            requestsList.innerHTML += createUserCardHTML(user, 'request');
+    // 1. Charger les demandes d'amitié
+    async function fetchPendingRequests() {
+        const token = sessionStorage.getItem('userToken');
+        const response = await fetch('/facebook_clone/Api/friend/requests_received.php', {
+            headers: { 'Authorization': 'Bearer ' + token }
         });
-    } else {
-        requestsList.innerHTML = '<p>Aucune nouvelle demande d\'amitié.</p>';
+        const data = await response.json();
+        if (data.success) {
+            requestsList.innerHTML = '';
+            data.requests.forEach(user => {
+                requestsList.innerHTML += createUserCardHTML(user, 'request');
+            });
+        } else {
+            alert("Erreur : " + data.error);
+        }
+    }
+    await fetchPendingRequests();
+
+    // 2. Charger tous les utilisateurs
+    async function fetchAllUsers() {
+        allUsersList.innerHTML = 'Chargement...';
+        const token = sessionStorage.getItem('userToken');
+
+        try {
+            const response = await fetch('/facebook_clone/Api/friend/usersApi.php', {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+            });
+            const usersResponse = await response.json();
+            if (usersResponse.success) {
+                allUsersList.innerHTML = '';
+                usersResponse.users.forEach(user => {
+                    allUsersList.innerHTML += createUserCardHTML(user, 'user');
+                });
+                return usersResponse.users; // on retourne la liste complète pour la recherche
+            } else {
+                allUsersList.innerHTML = '<p>Impossible de charger les utilisateurs.</p>';
+                return [];
+            }
+        } catch (error) {
+            allUsersList.innerHTML = `<p>Erreur réseau : ${error.message}</p>`;
+            return [];
+        }
     }
 
-    // --- 2. Charger tous les utilisateurs ---
-    allUsersList.innerHTML = 'Chargement...';
-    const usersResponse = await apiFetchAllUsers();
-    if (usersResponse.success) {
-        allUsersList.innerHTML = '';
-        usersResponse.users.forEach(user => {
-            allUsersList.innerHTML += createUserCardHTML(user, 'user');
-        });
-    } else {
-        allUsersList.innerHTML = '<p>Impossible de charger les utilisateurs.</p>';
-    }
-    
-    // --- 3. Ajouter l'interactivité ---
+    // Stocke tous les utilisateurs pour le filtre
+    let allUsers = await fetchAllUsers();
+
+    // 3. Attacher les événements (clics boutons, recherche)
     attachFriendsPageEventListeners();
+
+    // 4. Gestion de la recherche sur le nom utilisateur
+    searchInput.addEventListener('keyup', () => {
+        const filter = searchInput.value.toLowerCase().trim();
+
+        // On vide la liste pour reconstruire
+        allUsersList.innerHTML = '';
+
+        // Filtrer les utilisateurs par nom qui contient le texte recherché
+        const filteredUsers = allUsers.filter(user => user.name.toLowerCase().includes(filter));
+
+        if (filteredUsers.length === 0) {
+            allUsersList.innerHTML = '<p>Aucun utilisateur trouvé.</p>';
+        } else {
+            filteredUsers.forEach(user => {
+                allUsersList.innerHTML += createUserCardHTML(user, 'user');
+            });
+        }
+    });
 }
 
+// Fonction globale pour envoyer une demande d'amitié
+async function sendFriendRequest(userId) {
+    const token = sessionStorage.getItem('userToken');
+    const btn = document.querySelector(`.add-friend-btn[data-user-id="${userId}"]`);
+
+    try {
+        const response = await fetch('/facebook_clone/Api/friend/send_request.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            },
+            body: JSON.stringify({ recipient_user_id: userId })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            alert(data.message || 'Demande d\'ami envoyée avec succès.');
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = 'Demande envoyée';
+            }
+        } else {
+            alert('Erreur : ' + (data.error || 'Erreur inconnue'));
+        }
+    } catch (error) {
+        alert('Erreur réseau ou serveur : ' + error.message);
+    }
+}
+
+// Attacher les événements liés aux boutons d’amitié
 function attachFriendsPageEventListeners() {
     const container = document.getElementById('friends-page-container');
-    
-    container.addEventListener('click', (event) => {
-        const target = event.target;
-        
-        // Accepter une demande
-        const acceptBtn = target.closest('.accept-friend-btn');
-        if (acceptBtn) {
-            const userId = acceptBtn.dataset.userId;
-            console.log(`Demande d'ami de l'utilisateur #${userId} acceptée.`);
-            const card = document.getElementById(`user-card-${userId}`);
-            card.innerHTML = `<p style="color: green;">Vous êtes maintenant amis.</p>`;
-            setTimeout(() => card.remove(), 2000); // Fait disparaître la carte après 2s
-        }
 
-        // Refuser une demande
-        const refuseBtn = target.closest('.refuse-friend-btn');
-        if (refuseBtn) {
-            const userId = refuseBtn.dataset.userId;
-            console.log(`Demande d'ami de l'utilisateur #${userId} refusée.`);
-            const card = document.getElementById(`user-card-${userId}`);
-            card.style.opacity = '0.5';
-            card.innerHTML += `<p style="color: red;">Demande refusée.</p>`;
-            setTimeout(() => card.remove(), 2000);
-        }
+    container.addEventListener('click', async function (e) {
+        const token = sessionStorage.getItem('userToken');
 
-        // Ajouter un ami
-        const addBtn = target.closest('.add-friend-btn');
-        if (addBtn) {
-            const userId = addBtn.dataset.userId;
-            console.log(`Demande d'ami envoyée à l'utilisateur #${userId}.`);
-            addBtn.textContent = 'Demande envoyée';
-            addBtn.disabled = true; // Désactive le bouton pour ne pas cliquer 2 fois
-        }
-    });
+        // Accepter une demande d'amitié
+        if (e.target.classList.contains('accept-friend-btn')) {
+            const userId = e.target.getAttribute('data-user-id');
 
-    // Filtre de recherche
-    const searchInput = document.getElementById('search-users-input');
-    searchInput.addEventListener('keyup', () => {
-        const filter = searchInput.value.toLowerCase();
-        const userCards = document.querySelectorAll('#all-users-list .user-card');
-        
-        userCards.forEach(card => {
-            const userName = card.querySelector('strong').textContent.toLowerCase();
-            if (userName.includes(filter)) {
-                card.style.display = 'flex';
+            const res = await fetch('/facebook_clone/Api/friend/respond_request.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    target_user_id: userId,
+                    action: 'accept'
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                e.target.textContent = 'Acceptée';
+                e.target.disabled = true;
+                if (e.target.nextElementSibling) e.target.nextElementSibling.disabled = true; // désactiver "Refuser"
             } else {
-                card.style.display = 'none';
+                alert(data.error || "Erreur lors de l'acceptation");
             }
-        });
+        }
+
+        // Refuser une demande d'amitié
+        if (e.target.classList.contains('refuse-friend-btn')) {
+            const userId = e.target.getAttribute('data-user-id');
+
+            const res = await fetch('/facebook_clone/Api/friend/respond_request.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    target_user_id: userId,
+                    action: 'refuse'
+                })
+            });
+
+            const data = await res.json();
+            if (data.success) {
+                e.target.textContent = 'Refusée';
+                e.target.disabled = true;
+                if (e.target.previousElementSibling) e.target.previousElementSibling.disabled = true; // désactiver "Accepter"
+            } else {
+                alert(data.error || "Erreur lors du refus");
+            }
+        }
+
+        // Envoyer une demande d'amitié
+        if (e.target.classList.contains('add-friend-btn')) {
+            const userId = e.target.getAttribute('data-user-id');
+            sendFriendRequest(userId);
+        }
     });
 }
+
 async function initChatPage() {
     console.log("Page de Chat initialisée.");
     attachLogoutEvent();

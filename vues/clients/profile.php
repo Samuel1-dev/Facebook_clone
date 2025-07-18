@@ -26,7 +26,7 @@
         <a href="#chat" class="fb-header-action-icon" aria-label="Messenger"><i class="fab fa-facebook-messenger"></i></a>
         <button class="fb-header-action-icon" aria-label="Notifications"><i class="fas fa-bell"></i></button>
         <a href="#profile" class="fb-header-action-icon fb-header-profile-avatar-link" aria-label="Compte">
-            <img src="https://i.pravatar.cc/28?u=currentUser" alt="Profil" class="fb-user-avatar-sm" id="header-user-avatar">
+            <img src="/facebook_clone/assets/default-avatar.jpg" alt="Profil" class="fb-user-avatar-sm" id="header-user-avatar">
         </a>
         <!-- BOUTON DE DÉCONNEXION STYLÉ ET POSITIONNÉ À DROITE -->
         <button id="logout-btn" class="btn btn-sm fb-logout-button-header">

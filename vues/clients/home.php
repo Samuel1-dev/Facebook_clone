@@ -26,7 +26,7 @@
         <a href="#chat" class="fb-header-action-icon" aria-label="Messenger"><i class="fab fa-facebook-messenger"></i></a>
         <button class="fb-header-action-icon" aria-label="Notifications"><i class="fas fa-bell"></i></button>
         <a href="#profile" class="fb-header-action-icon fb-header-profile-avatar-link" aria-label="Compte">
-            <img src="https://i.pravatar.cc/28?u=currentUser" alt="Profil" class="fb-user-avatar-sm" id="header-user-avatar">
+            <img src="/facebook_clone/assets/default-avatar.jpg" alt="Profil" class="fb-user-avatar-sm" id="header-user-avatar">
         </a>
         <!-- BOUTON DE DÉCONNEXION STYLÉ ET POSITIONNÉ À DROITE -->
         <button id="logout-btn" class="btn btn-sm fb-logout-button-header">
@@ -41,7 +41,7 @@
     <aside class="fb-left-sidebar">
         <nav>
             <ul>
-                <li><a href="#profile"><img src="https://i.pravatar.cc/30?u=currentUser" class="fb-sidebar-icon avatar" alt="Profil"> <span>Ayindé Ams</span></a></li>
+                <li><a href="#profile"><img src="/facebook_clone/assets/default-avatar.jpg  " class="fb-sidebar-icon avatar" alt="Profil"> <span></span></a></li>
                 <li><a href="#friends"><i class="fas fa-user-friends fb-sidebar-icon"></i> <span>Amis</span></a></li>
                 <li><a href="#"><i class="fas fa-bookmark fb-sidebar-icon"></i> <span>Enregistrements</span></a></li>
                 <li><a href="#"><i class="fas fa-users fb-sidebar-icon"></i> <span>Groupes</span></a></li>
@@ -61,25 +61,26 @@
   <div class="fb-create-post-box card-fb-dark">
     <div class="create-post-header">
       <a href="#profile">
-        <img src="https://i.pravatar.cc/40?u=currentUser" alt="Avatar" class="fb-user-avatar-md" />
+        <img src="/facebook_clone/assets/default-avatar.jpg" alt="Avatar" class="fb-user-avatar-md" />
       </a>
       <input
         type="text"
-        placeholder="Quoi de neuf, Ayindé ?"
+        placeholder="Quoi de neuf ?"
         class="create-post-input"
         name="description"
         autocomplete="off"
       />
       <!-- Champ pour uploader une image -->
-      <input type="file" class="create-post-image" name="image" accept="image/*" />
     </div>
     <hr class="my-2" />
     <div class="create-post-actions">
-      <button type="button"><i class="fas fa-video text-danger"></i> Vidéo en direct</button>
-      <button type="button"><i class="fas fa-photo-video text-success"></i> Photo/Vidéo</button>
-      <button type="button"><i class="far fa-grin-beam text-warning"></i> Humeur/Activité</button>
+    <button type="button" id="liveBtn"><i class="fas fa-video text-danger"></i> Vidéo en direct</button>
+    <button type="button" id="photoBtn"><i class="fas fa-photo-video text-success"></i> Photo/Vidéo</button>
+    <button type="button"><i class="far fa-grin-beam text-warning"></i> Humeur/Activité</button>
     </div>
-  </div>
+
+    <input type="file" id="imageInput" name="image" accept="image/*" style="display: none;">
+
 
   <!-- Conteneur pour les articles du fil d'actualité -->
   <div id="feed-container">
